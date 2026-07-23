@@ -1,0 +1,2 @@
+{"external_event_id":"opencode-11-1","kind":"user_message","payload":{"type":"message","data":{"content":"Continue the imported task."}},"metadata":{"vendor_schema":"1.1","unknown_optional":{"preserved":true}}}
+{"external_event_id":"opencode-11-2","kind":"tool_result","payload":{"type":"tool_result","data":{"tool_call_id":"tool-1","summary":"Structured export completed.","content_hash":"abc123","artifact_path":null,"success":true}},"metadata":{"vendor_schema":"1.1"}}

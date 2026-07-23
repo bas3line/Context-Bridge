@@ -1,0 +1,22 @@
+[package]
+name = "cb-adapters"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+cb-context = { path = "../cb-context", version = "0.1.0" }
+cb-core = { path = "../cb-core", version = "0.1.0" }
+cb-process = { path = "../cb-process", version = "0.1.0" }
+cb-security = { path = "../cb-security", version = "0.1.0" }
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

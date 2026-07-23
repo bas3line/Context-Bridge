@@ -1,0 +1,36 @@
+[package]
+name = "cb-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "cb"
+path = "src/main.rs"
+
+[dependencies]
+async-trait.workspace = true
+cb-adapters = { path = "../cb-adapters", version = "0.1.0" }
+cb-context = { path = "../cb-context", version = "0.1.0" }
+cb-core = { path = "../cb-core", version = "0.1.0" }
+cb-project = { path = "../cb-project", version = "0.1.0" }
+cb-security = { path = "../cb-security", version = "0.1.0" }
+cb-storage = { path = "../cb-storage", version = "0.1.0" }
+chrono.workspace = true
+clap.workspace = true
+directories.workspace = true
+miette.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+toml.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+cb-test-support = { path = "../cb-test-support", version = "0.1.0" }
+tempfile.workspace = true
+
+[lints]
+workspace = true

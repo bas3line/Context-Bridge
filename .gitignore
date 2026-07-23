@@ -1,0 +1,12 @@
+/target/
+/.opencode/
+/.claude/
+/.codex/
+/.context-bridge/
+/node_modules/
+/.idea/
+/.vscode/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store

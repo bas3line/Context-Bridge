@@ -1,0 +1,2 @@
+{"external_event_id":"codex-11-1","kind":"user_message","payload":{"type":"message","data":{"content":"Resume this bridge-created Codex session."}},"metadata":{"vendor_schema":"1.1","unknown_optional":{"preserved":true}}}
+{"external_event_id":"codex-11-2","kind":"assumption","payload":{"type":"assumption","data":{"assumption":"The repository is authoritative over the handoff."}},"metadata":{"vendor_schema":"1.1"}}

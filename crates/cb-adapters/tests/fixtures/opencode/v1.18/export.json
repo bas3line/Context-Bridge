@@ -1,0 +1,33 @@
+{
+  "messages": [
+    {
+      "info": {
+        "id": "msg_user",
+        "role": "user",
+        "time": { "created": "2026-07-24T10:00:00Z" }
+      },
+      "parts": [{ "type": "text", "text": "Add structured import." }]
+    },
+    {
+      "info": {
+        "id": "msg_assistant",
+        "role": "assistant",
+        "time": { "created": 1784887260000 }
+      },
+      "parts": [
+        { "type": "text", "text": "I will inspect the export." },
+        {
+          "id": "part_tool",
+          "type": "tool",
+          "tool": "read",
+          "callID": "call_fixture_1",
+          "state": {
+            "input": { "path": "docs/compatibility.md" },
+            "output": "file contents",
+            "status": "completed"
+          }
+        }
+      ]
+    }
+  ]
+}

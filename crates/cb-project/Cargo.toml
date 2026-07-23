@@ -1,0 +1,19 @@
+[package]
+name = "cb-project"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+blake3.workspace = true
+cb-core = { path = "../cb-core", version = "0.1.0" }
+cb-security = { path = "../cb-security", version = "0.1.0" }
+chrono.workspace = true
+ignore.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true
