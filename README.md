@@ -1,132 +1,195 @@
 # Context Bridge
 
-> Local-first, redacted context handoffs between AI coding agents.
+<p align="center">
+  <strong>Move coding work between AI agents without losing the plot.</strong><br>
+  A local-first CLI for durable, redacted context handoffs.
+</p>
 
-Context Bridge (`cb`) is a local-first context synchronization CLI for AI coding
-agents. It records observable session events in a vendor-neutral, append-only
-log and derives redacted handoff packages so work can continue in another agent
-without pretending to transfer hidden model state, private reasoning, or KV
-caches.
+<p align="center">
+  <code>local-only</code> · <code>redaction-aware</code> · <code>evidence-based</code> · <code>vendor-neutral</code>
+</p>
 
-**Status:** early `0.1.0` release. The canonical event model and privacy
-boundary are stable enough to evaluate locally; adapter compatibility remains
-intentionally narrow and version-gated.
+```text
+ OpenCode ── import / run ──┐
+                            │  canonical event log
+ Claude Code ── continue ───┼──► reviewed, redacted handoff
+                            │
+ Codex ──────── continue ───┘
+```
 
-## Why Context Bridge?
+Most agent CLIs make it easy to start a session and awkward to leave one.
+**Context Bridge** (`cb`) records the observable work around a coding session,
+keeps it on your machine, and creates a focused continuation for the next
+agent. It transfers useful evidence—not an imaginary perfect clone of hidden
+model state, private reasoning, or provider-side caches.
 
-Coding sessions are often stranded in one CLI even when the next task needs a
-different model or agent. **Context Bridge preserves the observable work, not
-the illusion of a perfect session clone.** It gives the next agent a reviewed
-brief containing the task, repository state, useful conversation, and recorded
-evidence while keeping the canonical event log on the operator's machine.
+> **Status:** early `0.1.0`. The canonical event model, local storage, and
+> redaction boundary are ready to evaluate. Agent adapters are deliberately
+> narrow, documented, and version-gated.
 
-- **Local-first:** no telemetry, upload service, or vendor session mutation.
-- **Redaction-aware:** secret-classified events and excluded paths stay out of
-  generated target prompts.
-- **Evidence-based:** commands, tests, Git state, checkpoints, and provenance
-  are explicit instead of inferred from a terminal scrape.
-- **Version-gated:** documented adapter profiles are supported; unknown profiles
-  fall back safely instead of reading private agent databases.
+## Why use it?
+
+Switch models because the task changed—not because starting over is cheaper
+than preserving the thread.
+
+| Without a bridge | With Context Bridge |
+| --- | --- |
+| Re-explain the task and repository state | Start with the current objective, Git state, decisions, tests, and next action |
+| Paste logs into a giant prompt | Keep an ordered, local canonical event log and generate a bounded handoff |
+| Hope a vendor database format is stable | Use documented adapter protocols with explicit compatibility checks |
+| Risk copying secrets into the next session | Classify sensitive events and exclude known credential paths before handoff |
 
 ## Quick start
 
-Install from a local checkout with the pinned Rust toolchain, then verify the
-agent profiles on the machine before moving any session:
+Install from a checkout, then inspect the agent profiles available on this
+machine:
 
 ```bash
 cargo install --path crates/cb-cli --locked
 cb doctor --verbose
 ```
 
-Start a bridge-managed OpenCode session, or import an existing supported session:
+### Start fresh, import history, or resume
+
+For OpenCode, `cb run opencode` opens a small session deck. Pick a fresh run,
+import an existing session, resume a bridged one, or inspect local sessions.
 
 ```bash
 cb run opencode
-
-cb import opencode --session <opencode-session-id>
-cb continue --session <bridge-session-id> --from opencode --to claude --preview
-cb continue --session <bridge-session-id> --from opencode --to claude
 ```
 
-Always run `--preview` before launching a handoff. See
-[the import guide](docs/import.md) for raw-export boundaries, recency-first
-context budgets, and target-agent continuation details.
-
-The current `0.1.0` milestone provides the canonical model, SQLite storage,
-project and Git reconciliation, deterministic context reduction, redaction,
-inspection/export commands, and fixture-driven end-to-end handoffs. Production
-adapters are enabled only for explicitly versioned, documented CLI profiles:
-OpenCode 1.18 has structured session discovery and sanitized JSON export;
-Claude Code 2.1 and Codex CLI 0.145 support documented bootstrap prompts and
-native resume. Unknown versions degrade to a manual handoff file rather than
-guessing undocumented flags or private storage formats.
-
-## What is transferred
-
-- User, assistant, and system messages
-- Structured tool calls and relevant results
-- Commands, tests, decisions, assumptions, and errors
-- Files inspected or changed
-- Git branch, HEAD, status, staged/unstaged diffs, and untracked paths
-- Checkpoints, completed work, pending tasks, and the recommended next action
-- Provenance, content hashes, parser versions, and source event identifiers
-
-Generated summaries are derived data. The append-only canonical event log is
-the source of truth and can reproduce a handoff.
-
-## Install from source
-
-Rust 1.89 or newer is supported; `rust-toolchain.toml` pins the development
-toolchain used by CI.
+To move an existing supported OpenCode session into Claude Code:
 
 ```bash
-cargo build --release -p cb-cli
-cargo install --path crates/cb-cli --locked
-cb doctor --verbose
+# Reads the documented sanitized export. The source session is never changed.
+cb import opencode --session <opencode-session-id>
+
+# Inspect exactly what the next agent will receive.
+cb continue --session <bridge-session-id> --to claude --preview
+
+# Launch Claude Code with the handoff.
+cb continue --session <bridge-session-id> --to claude
 ```
 
-No telemetry or network service is enabled. Data is stored in the
-platform-appropriate application data directory, or at `CB_DATA_DIR` when set.
+Need raw local text that OpenCode's sanitizer omits? Opt in consciously:
 
-## CLI
+```bash
+cb import opencode --session <opencode-session-id> --full
+```
+
+`--full` can include sensitive text. Review and keep that bridge data local.
+See the [session import guide](docs/import.md) for the complete workflow,
+recency-first context budgets, and continuation behavior.
+
+## What moves—and what does not
+
+Context Bridge preserves observable, useful work:
+
+- User, assistant, and system messages from supported imports
+- Structured tool calls, relevant results, commands, tests, and errors
+- Files inspected or changed, plus Git branch, HEAD, status, and diffs
+- Decisions, assumptions, checkpoints, and the recommended next action
+- Provenance, content hashes, parser versions, and source event identifiers
+
+It intentionally does **not** claim to transfer hidden model state,
+chain-of-thought, provider-side KV caches, vendor-owned session records, or
+undocumented private databases. There is no Context Bridge cloud service, raw
+terminal capture, telemetry, or source-session mutation.
+
+The canonical append-only event log stays on the operator's machine. Handoffs
+are derived from it, so they can be reviewed or regenerated later.
+
+## How a handoff works
 
 ```text
-cb [--trust-project-config] <command>
-cb run <codex|claude|opencode>
-cb continue [--session <id> | --last] [--from <agent>] --to <agent>
-cb import <agent> [--session <external-id>]
-cb sessions
-cb show <session-id>
-cb timeline <session-id> [--include-sensitive]
-cb diff <session-id>
-cb checkpoint [--note <text>]
-cb export <session-id> --format <markdown|json> [--redacted]
-cb integrate <agent> [--remove]
-cb doctor --verbose
-cb config show
-cb config path
-cb config set security.redaction strict
+1. Capture     Start through cb, or import a documented external export.
+2. Reconcile   Record project/Git state, checkpoints, and observable events.
+3. Reduce      Build a deterministic package within the target context budget.
+4. Protect     Apply path exclusions and secret classification before injection.
+5. Continue    Preview or launch the target through its documented interface.
 ```
 
-Use `cb continue --to opencode --preview` to render a handoff without launching
-the target. `--budget` overrides the approximate deterministic token budget.
+Large sessions remain local in full. A target prompt still has a finite context
+window, so `--budget` controls the generated handoff—not the amount of history
+stored. Conversation selection is **recency-first**: Context Bridge keeps the
+newest supported conversation that fits alongside the current objective and
+structured repository state.
 
-`cb timeline` omits non-normal events by default; pass `--include-sensitive`
-only for private local inspection.
+```bash
+cb continue --session <bridge-session-id> --to claude --budget 100000 --preview
+```
 
-`cb run` inherits the caller's controlling terminal directly. It does not parse
-ANSI output or insert a fake pipe between the user and the agent. After the
-child exits, it always reconciles the filesystem and Git state. Structured
-records are imported only by an adapter with an explicitly supported,
-documented protocol. Currently that includes OpenCode 1.18's sanitized JSON
-export; the fixture-only Fake JSONL v1 profile remains in the test suite.
-Claude and Codex do not expose a documented structured transcript-import path
-in their guarded profiles, so Context Bridge captures their observable project
-state and resumes only bridge-linked sessions through documented CLI commands.
+For Claude Code, the handoff is passed through its documented
+`--append-system-prompt-file` interface, avoiding shell argument-length limits.
+
+## Compatibility
+
+Adapters take the safe path when a tool's documented protocol is unavailable:
+they refuse structured import rather than guessing flags or reading private
+agent data.
+
+| Capability | Codex CLI | Claude Code | OpenCode |
+| --- | --- | --- | --- |
+| Guarded version detection | 0.145 | 2.1 | 1.18 |
+| Interactive launch | Yes | Yes | Yes |
+| Historic structured import | Not available | Not available | Sanitized export |
+| Raw historic import | Not available | Not available | Explicit `--full` export |
+| Context injection | Prompt argument | Prompt file | Prompt argument |
+| Resume bridge-linked sessions | Yes | Yes | Yes |
+
+Run `cb doctor --verbose` before importing or continuing. Unsupported or
+unknown profiles degrade safely to a manual handoff instead of modifying source
+sessions.
+
+## Privacy by default
+
+Context Bridge is built for work that should not be silently copied into
+another vendor's context window.
+
+- Local SQLite storage with WAL, foreign keys, embedded migrations, and
+  restrictive file permissions
+- Strict secret classification before a target prompt is generated
+- Known credential paths excluded from file context
+- Repository configuration treated as untrusted unless you explicitly opt in
+
+Use `cb timeline <bridge-session-id>` for local inspection. If a handoff must
+leave your machine, export a redacted copy first:
+
+```bash
+cb export <bridge-session-id> --format json --redacted > session-context.json
+```
+
+An unredacted export is an explicit local operation and may contain sensitive
+canonical events. Read the [privacy and security guide](docs/privacy-and-security.md)
+before sharing one.
+
+## Command map
+
+```text
+cb run <codex|claude|opencode>              Launch and record observable work
+cb import opencode [--session <id>] [--full] Bring in a supported session
+cb continue --session <id> --to <agent>     Generate and launch a handoff
+cb continue --last --from <agent> --to <agent>
+cb sessions | show <id> | timeline <id>     Inspect local bridge data
+cb diff <id> | checkpoint [--note <text>]   Review changes or mark progress
+cb export <id> --format <markdown|json>     Export local canonical context
+cb integrate claude [--remove]              Manage the opt-in Claude hook
+cb doctor --verbose                         Check agents and profiles
+```
+
+Useful global flags:
+
+```text
+--project <path>       Operate on another repository
+--data-dir <path>      Override the local Context Bridge data directory
+--config <path>        Use an explicit trusted configuration file
+--trust-project-config Allow privileged repository-local configuration
+--json                 Emit machine-readable output
+```
 
 ## Configuration
 
-Configuration is layered in this order:
+Configuration resolves in this order:
 
 1. Built-in defaults
 2. Global config
@@ -141,70 +204,43 @@ default_target = "claude"
 context_budget = 40000
 preview_before_handoff = false
 
-[storage]
-data_dir = "~/.local/share/context-bridge"
-
 [security]
 redaction = "strict"
 excluded_paths = [".env", ".env.*", "**/secrets/**", "~/.ssh/**"]
-
-[agents.claude]
-executable = "claude"
-
-[agents.codex]
-executable = "codex"
-
-[agents.opencode]
-executable = "opencode"
 
 [summarization]
 mode = "deterministic"
 ```
 
-Unknown fields are rejected. Environment-variable values are not captured or
-stored.
+Repository-local configuration is untrusted by default. Without
+`--trust-project-config`, it may set only `general.default_target` and
+`general.context_budget`; executable paths, storage, and redaction policy stay
+protected. Inspect your active configuration with:
 
-Repository-local `.context-bridge.toml` is untrusted by default. Without
-`--trust-project-config`, it may only set `general.default_target` and
-`general.context_budget`; storage locations, redaction policy, agent
-executables, and other privileged settings are rejected. Pass the flag only
-after reviewing the repository configuration (or explicitly select a config
-file you trust with `--config`).
+```bash
+cb config show
+cb config path
+```
 
-## Compatibility status
+## Install from source
 
-| Capability | Fake JSONL v1 | Codex CLI | Claude Code | OpenCode |
-| --- | --- | --- | --- | --- |
-| Detection/version | Yes | Codex CLI 0.145 | Claude Code 2.1 | OpenCode 1.18 |
-| Interactive launch | Yes | Yes | Yes | Yes |
-| Structured import | Yes | Disabled | Disabled | Sanitized export |
-| Context injection | Yes | Prompt argument | Prompt argument | Prompt argument |
-| Native resume | Yes | Yes | Yes | Yes |
-| Hook/config changes | Not applicable | None | Optional project hook | None |
+Rust `1.89` or newer is supported; `rust-toolchain.toml` pins the development
+toolchain used by CI.
 
-The fake protocol is test-only and enabled by `CB_TEST_MODE=true`. A fake
-executable receives paths through `CB_EVENT_SINK`, `CB_SESSION_METADATA`, and
-`CB_BOOTSTRAP_PATH`; production integrations never receive these variables.
+```bash
+cargo build --release -p cb-cli
+cargo install --path crates/cb-cli --locked
+cb doctor --verbose
+```
 
-`cb integrate claude` installs one project-local `SessionEnd` command hook in
-`.claude/settings.local.json`, backs up pre-existing settings, and preserves
-unrelated hook groups. `cb integrate claude --remove` removes only that hook.
+Data is stored in the platform-appropriate application data directory, or in
+`CB_DATA_DIR` when that environment variable is set.
 
-## Security defaults
+## Contributing
 
-- Local-only storage with restrictive directory and SQLite permissions
-- WAL, foreign keys, embedded migrations, and crash-safe transactions
-- Strict secret classification before handoff
-- Known credential paths excluded from file context
-- Secret-classified events never enter a target prompt
-- No raw terminal logging, telemetry, or uploads
-- No modification of vendor-owned session records
-
-An unredacted export is an explicit local operation and may contain sensitive
-canonical events. Prefer `--redacted` before sharing an export. See
-[privacy and security](docs/privacy-and-security.md) for the threat model.
-
-## Development
+Context Bridge is Rust-first and intentionally conservative around external
+agent formats. New adapters need documented protocol evidence, guarded version
+profiles, fixtures, and failure modes that preserve the source session.
 
 ```bash
 cargo fmt --all -- --check
@@ -213,26 +249,19 @@ cargo test --workspace --all-features
 cargo deny check
 ```
 
-The integration test creates a temporary Git repository and fake executables,
-then proves the complete continuation and crash-safety scenario without real
+The integration suite creates temporary repositories and fake agent
+executables to exercise full continuation and crash-safety paths without real
 agent credentials.
 
-Architecture and extension details live in [docs/architecture.md](docs/architecture.md)
-and [docs/adapter-development.md](docs/adapter-development.md). For the
-practical OpenCode-to-Claude/Codex workflow, see
-[docs/import.md](docs/import.md).
+- [Contributing](CONTRIBUTING.md)
+- [Architecture](docs/architecture.md)
+- [Canonical context format](docs/canonical-context-format.md)
+- [Adapter development](docs/adapter-development.md)
+- [Compatibility](docs/compatibility.md)
+- [Session import guide](docs/import.md)
+- [Privacy and security](docs/privacy-and-security.md)
+- [Security policy](SECURITY.md)
 
-## Documentation and community
+## License
 
-- [Architecture](docs/architecture.md) explains the canonical event model,
-  storage boundary, and deterministic handoff reduction.
-- [Compatibility](docs/compatibility.md) lists the guarded agent profiles and
-  their supported capabilities.
-- [Privacy and security](docs/privacy-and-security.md) documents redaction,
-  excluded paths, and safe local exports.
-- [Contributing](CONTRIBUTING.md) covers development gates and parser-fixture
-  expectations.
-- [Security policy](SECURITY.md) explains how to report a vulnerability without
-  disclosing session data or credentials.
-
-Context Bridge is released under the [MIT License](LICENSE).
+MIT © Context Bridge contributors. See [LICENSE](LICENSE).
