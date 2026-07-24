@@ -18,7 +18,7 @@ edition = "2024"
 rust-version = "1.89"
 authors = ["Context Bridge contributors"]
 license = "MIT"
-repository = "https://github.com/context-bridge/context-bridge"
+repository = "https://github.com/bas3line/Context-Bridge"
 
 [workspace.dependencies]
 async-trait = "0.1.89"

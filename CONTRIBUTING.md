@@ -5,7 +5,7 @@ Thank you for improving Context Bridge.
 ## Development setup
 
 ```bash
-git clone https://github.com/bas3line/Context-Birdge
+git clone https://github.com/bas3line/Context-Bridge
 cd context-bridge
 cargo test --workspace --all-features
 ```

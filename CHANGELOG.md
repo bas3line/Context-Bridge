@@ -28,5 +28,5 @@ Versioning and the Keep a Changelog structure.
 - Fake JSONL compatibility profile and complete Claude → OpenCode → Codex test
 - Versioned, malformed, unknown-field, redaction, crash, and golden fixtures
 
-[Unreleased]: https://github.com/context-bridge/context-bridge/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/context-bridge/context-bridge/releases/tag/v0.1.0
+[Unreleased]: https://github.com/bas3line/Context-Bridge/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/bas3line/Context-Bridge/releases/tag/v0.1.0

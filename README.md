@@ -9,6 +9,10 @@
   <code>local-only</code> · <code>redaction-aware</code> · <code>evidence-based</code> · <code>vendor-neutral</code>
 </p>
 
+<p align="center">
+  <a href="https://github.com/bas3line/Context-Bridge">github.com/bas3line/Context-Bridge</a>
+</p>
+
 ```text
  OpenCode ── import / run ──┐
                             │  canonical event log
